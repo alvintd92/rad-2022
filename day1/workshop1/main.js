@@ -19,6 +19,10 @@ const app = express()
 app.use(morgan("common"))
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
+app.use(range({
+  accept: 'items',
+  limit: 10,
+}))
 
 // Games
 // TODO GET /games
@@ -27,9 +31,29 @@ app.get('/games', async (req, resp) => {
 	const limit = parseInt(req.query.limit) || 10
 	
 	try {
-		const result = await findAllGames(offset, limit)
+		let first, last
+
+		if(req.range()) {
+			first = req.range.first
+			last = req.range.last	
+		}
+
+		let result = await findAllGames(offset, limit)
+		// implement range
+		if(first && last) result = result.slice(first, last + 1)
 		resp.status(200)
 		resp.json(result.map(r => `/game/${r.id}`))
+	} catch (err) {
+		resp.status(500)
+		resp.json(mkError(err))
+	}
+})
+
+app.head('/games', async (req, resp) => {
+	try {
+		resp.status(200)
+		console.log(req.range())
+		resp.range()
 	} catch (err) {
 		resp.status(500)
 		resp.json(mkError(err))
@@ -52,7 +76,7 @@ app.get('/game/:gameId', async (req, resp) => {
 				resp.json(result)
 			} else {
 				resp.status(415)
-				resp.json(mkError(`Media ${req.get('Content-Type')} is not supported`))
+				resp.json(mkError(`Media ${contentType} is not supported`))
 			}
 			
 		} else {

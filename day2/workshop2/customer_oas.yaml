@@ -1,0 +1,147 @@
+openapi: "3.0.3"
+info:
+  title: Customer
+  description: Customer endpoints
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Development Server
+  - url: http://localhost:8080
+    description: Reverse Proxy
+paths:
+  /customer/{custId}:
+    get:
+      description: Returns a customer record
+      operationId: getCustomerByCustomerId
+      parameters:
+        - name: custId
+          in: path
+          description: Customer ID
+          required: true
+          schema:
+            type: number
+            format: int32
+      responses:
+        '200':
+          description: Return customer record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /customers:
+    get:
+      description: Returns all customer
+      operationId: customers
+      parameters:
+        - name: offset
+          in: query
+          description: offset
+          required: false
+          schema:
+            type: number
+            format: int32
+        - name: limit
+          in: query
+          description: limit
+          required: false
+          schema:
+            type: number
+            format: int32
+      responses:
+        '200':
+          description: customer response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /customer:
+    post:
+      description: Create new customer
+      operationId: createCustomer
+      requestBody: 
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Customer"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Customer"
+      responses:
+        '201':
+          description: Create customer successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerAdded'
+        '400':
+          description: Cannot provide customerId for inserts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Customer:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        customerId:
+          type: number
+          format: int32
+          minimum: 100
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+    Error:
+      type: object
+      properties:
+        message: 
+          type: string
+      required:
+        - message
+    CustomerAdded:
+      type: object
+      properties:
+        customerId:
+          type: number
+          format: int32
+          minimum: 100
+        message:
+          type: string
+        time:
+          type: string
+      required:
+        - customerId
+        - message
+        - time
