@@ -1,0 +1,110 @@
+1.
+query { 
+  viewer { 
+    login
+    name
+    url
+  }
+}
+
+2.
+query latest50($login:String!) {
+  user(login: $login) {
+    repositories (first: 50, orderBy: {field: PUSHED_AT, direction: DESC}) {
+      nodes {
+        name
+        projectsUrl
+        forkCount
+        description
+        owner {
+          login
+        }
+      }
+    }
+  }
+}
+
+3.
+query searchUserRepository($user:String!) {
+  user(login: $user) {
+    repositories (first: 50, orderBy: {field: PUSHED_AT, direction: DESC}) {
+      nodes {
+        name
+        projectsUrl
+        forkCount
+        description
+        owner {
+          login
+        }
+      }
+    }
+  }
+}
+
+4.
+query searchByTopic($first:Int!, $query:String!) {
+  search (first: $first, query:$query, type: REPOSITORY) {
+    repositoryCount
+    edges {
+      node {
+        ... on Repository {
+          name
+          projectsUrl
+          description
+        }
+      }
+    }
+  }
+}
+
+5.
+query searchRepoOrDiscussion($first:Int!, $query:String!, $type:SearchType!) {
+  search (query: $query, first:$first, type: $type) {
+    repositoryCount
+    edges {
+      node {
+        ... on Repository {
+          name
+          projectsUrl
+          description
+        }
+        ... on Discussion {
+          author {
+            login
+          }
+          body
+          title
+        }
+      }
+    }
+  }
+}
+
+6.
+mutation {
+ createRepository(input: { name: "my-repo", visibility:PUBLIC}) {
+    repository {
+      id
+    }
+  }
+}
+
+mutation {
+  createBranchProtectionRule(input: {
+    repositoryId:"repo_id", 
+    pattern: "main", 
+    requiresApprovingReviews:true, 
+    requiredApprovingReviewCount: 2, 
+    allowsDeletions:false
+  }) {
+    clientMutationId
+  }
+}
+
+7.
+curl --location --request POST 'https://api.github.com/graphql' \
+--header 'Authorization: Bearer {token value}}' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "query": "query { viewer { repositories (first: 50, orderBy: {field: CREATED_AT, direction: DESC}) { nodes { name projectsUrl forkCount description } } }}"
+}'
